@@ -30,3 +30,4 @@ jobs:
 
     - name: Display architecture
       run: echo "Architecture: ${{ matrix.arch }}"
+
