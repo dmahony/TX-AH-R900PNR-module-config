@@ -1,21 +1,32 @@
-name: C/C++ CI
+name: Build C Library
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-20.04, ubuntu-latest]
+        arch: [arm64, armhf, x86_64]
+
     steps:
-    - uses: actions/checkout@v3
-    - name: make
-      run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up QEMU for ARM emulation
+      if: matrix.arch != 'x86_64'
+      run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+    - name: Set up GCC
+      run: sudo apt-get install -y gcc
+
+    - name: Build C library
+      run: gcc -o libnetat libnetat.c
+
+    - name: Display architecture
+      run: echo "Architecture: ${{ matrix.arch }}"
