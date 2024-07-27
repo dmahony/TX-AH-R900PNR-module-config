@@ -1,4 +1,3 @@
-#include <error.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -16,7 +15,6 @@
 #include <linux/if.h>
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
-
 
 #define MAC2STR(a) (a)[0]&0xff, (a)[1]&0xff, (a)[2]&0xff, (a)[3]&0xff, (a)[4]&0xff, (a)[5]&0xff
 #define MACSTR     "%02x:%02x:%02x:%02x:%02x:%02x"
@@ -225,18 +223,27 @@ int main(int argc, char *argv[])
     char input[256];
     char response[1024];
 
-    if (argc == 2) {
-        ifname = argv[1];
-    } else {
-        printf("please input interface name!\n");
+    if (argc < 2) {
+        printf("Usage: %s <interface> [command]\n", argv[0]);
         return -1;
     }
+
+    ifname = argv[1];
 
     if (libnetat_init(ifname)) {
-        printf("libnetat init fail, inteface:%s\r\n", ifname);
+        printf("libnetat init fail, interface: %s\n", ifname);
         return -1;
     }
 
+    if (argc == 3) {
+        // Non-interactive mode
+        char *command = argv[2];
+        libnetat_send(command, response, sizeof(response));
+        printf("%s", response);
+        return 0;
+    }
+
+    // Interactive mode
     while (1) {
         memset(input, 0, sizeof(input));
         printf("\r\n>:");
